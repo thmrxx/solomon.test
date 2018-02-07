@@ -2,26 +2,38 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+$translations = require __DIR__ . '/translations.php';
 
 $config = [
     'id' => 'basic',
+    'name' => 'Solomon',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
+    // set target language to be Russian
+    //'language' => 'ru-RU',
+    // set source language to be English
+    'sourceLanguage' => 'en-US',
+
     'components' => [
+        'i18n' => [
+            'translations' => $translations,
+        ],
+        'formatter' => [
+            'class'          => yii\i18n\Formatter::class,
+            'dateFormat'     => 'php:d.m.Y',
+            'datetimeFormat' => 'php:d.m.Y, H:i:s',
+            'timeFormat'     => 'php:H:i:s',
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'M4iPH_dkDoCW2A2JzFN-0zWH1fGTT8CY',
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
-        ],
-        'user' => [
-            'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -43,14 +55,12 @@ $config = [
             ],
         ],
         'db' => $db,
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
             ],
         ],
-        */
     ],
     'params' => $params,
 ];

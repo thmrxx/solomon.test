@@ -2,37 +2,27 @@
 
 namespace app\controllers;
 
-use Yii;
-use yii\filters\AccessControl;
-use yii\web\Controller;
-use yii\web\Response;
+use app\models\User;
+use yii\data\ActiveDataProvider;
+use yii\db\Exception;
+use yii\filters\AjaxFilter;
 use yii\filters\VerbFilter;
-use app\models\LoginForm;
-use app\models\ContactForm;
+use yii\web\BadRequestHttpException;
+use yii\web\Controller;
 
 class SiteController extends Controller
 {
-    /**
-     * @inheritdoc
-     */
     public function behaviors()
     {
         return [
-            'access' => [
-                'class' => AccessControl::className(),
-                'only' => ['logout'],
-                'rules' => [
-                    [
-                        'actions' => ['logout'],
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
+            [
+                'class' => AjaxFilter::className(),
+                'only'  => ['user-status-change'],
             ],
-            'verbs' => [
-                'class' => VerbFilter::className(),
+            [
+                'class'   => VerbFilter::className(),
                 'actions' => [
-                    'logout' => ['post'],
+                    'user-status-change' => ['POST'],
                 ],
             ],
         ];
@@ -47,10 +37,6 @@ class SiteController extends Controller
             'error' => [
                 'class' => 'yii\web\ErrorAction',
             ],
-            'captcha' => [
-                'class' => 'yii\captcha\CaptchaAction',
-                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
-            ],
         ];
     }
 
@@ -58,69 +44,82 @@ class SiteController extends Controller
      * Displays homepage.
      *
      * @return string
+     * @throws \yii\base\InvalidParamException
      */
     public function actionIndex()
     {
-        return $this->render('index');
-    }
+        $user = new User;
 
-    /**
-     * Login action.
-     *
-     * @return Response|string
-     */
-    public function actionLogin()
-    {
-        if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+        if ($user->load(\Yii::$app->request->post()) && $user->save()) {
+            \Yii::$app->getSession()->setFlash('success', \Yii::t('user', 'User is successfully added'));
+            $user->setAttribute('login', null);
         }
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
-        }
-        return $this->render('login', [
-            'model' => $model,
+        $dataProvider = new ActiveDataProvider([
+            'query'      => User::find(),
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+            'sort'       => [
+                'defaultOrder' => [
+                    'id' => SORT_DESC,
+                ],
+            ],
+        ]);
+
+        return $this->render('index', [
+            'dataProvider' => $dataProvider,
+            'user' => $user,
         ]);
     }
 
     /**
-     * Logout action.
-     *
-     * @return Response
+     * @throws \yii\base\InvalidParamException
+     * @throws \yii\web\BadRequestHttpException
+     * @throws \yii\db\Exception
      */
-    public function actionLogout()
+    public function actionUserStatusChange()
     {
-        Yii::$app->user->logout();
+        try {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        return $this->goHome();
-    }
+            $userId = \Yii::$app->request->post('id');
+            $status = \Yii::$app->request->post('status');
 
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
-            Yii::$app->session->setFlash('contactFormSubmitted');
+            if ($status === null) {
+                throw new BadRequestHttpException(\Yii::t('exception', '`Status` parameter is required'));
+            }
 
-            return $this->refresh();
+            if (!$userId || !$user = User::findOne($userId)) {
+                throw new BadRequestHttpException(\Yii::t('exception', 'User #{id} is not found', [
+                    'id' => $userId,
+                ]));
+            }
+
+            $user->setAttribute('status', $status);
+
+            if (!$user->validate()) {
+                return ['status' => 'error', 'errors' => $user->getErrors()];
+            }
+            if (!$user->save()) {
+                throw new Exception(\Yii::t('exception', 'Can not save user #{id}'));
+            }
+
+            return [
+                'status' => 'success',
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'errors' => [
+                    [
+                        'code'    => $e->getCode(),
+                        'message' => $e->getMessage(),
+                        'trace'   => $e->getTraceAsString(),
+                    ],
+                ],
+            ];
         }
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Displays about page.
-     *
-     * @return string
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
     }
 }
