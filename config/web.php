@@ -5,13 +5,30 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'basic',
+    'name' => 'Solomon',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
+    // set target language to be Russian
+    'language' => 'ru-RU',
+    // set source language to be English
+    'sourceLanguage' => 'en-US',
+
     'components' => [
+        'i18n' => [
+            'translations' => [
+                'app*' => [
+                    'class'   => yii\i18n\PhpMessageSource::class,
+                    'fileMap' => [
+                        'app'           => 'app.php',
+                        'app-main-menu' => 'app-main-menu.php',
+                    ],
+                ],
+            ],
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'M4iPH_dkDoCW2A2JzFN-0zWH1fGTT8CY',

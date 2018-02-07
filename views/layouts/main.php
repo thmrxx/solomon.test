@@ -37,8 +37,8 @@ AppAsset::register($this);
     ]);
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav navbar-right'],
-        'items' => [
-            ['label' => 'Home', 'url' => ['/site/index']],
+        'items'   => [
+            ['label' => \Yii::t('app-main-menu', 'Home'), 'url' => ['/site/index']],
         ],
     ]);
     NavBar::end();
@@ -55,7 +55,7 @@ AppAsset::register($this);
 
 <footer class="footer">
     <div class="container">
-        <p class="pull-left">&copy; My Company <?= date('Y') ?></p>
+        <p class="pull-left">&copy; <?php echo \Yii::t('app', 'My Company'); ?> <?= date('Y') ?></p>
 
         <p class="pull-right"><?= Yii::powered() ?></p>
     </div>
