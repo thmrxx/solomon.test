@@ -2,6 +2,7 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+$translations = require __DIR__ . '/translations.php';
 
 $config = [
     'id' => 'basic',
@@ -13,21 +14,19 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     // set target language to be Russian
-    'language' => 'ru-RU',
+    //'language' => 'ru-RU',
     // set source language to be English
     'sourceLanguage' => 'en-US',
 
     'components' => [
         'i18n' => [
-            'translations' => [
-                'app*' => [
-                    'class'   => yii\i18n\PhpMessageSource::class,
-                    'fileMap' => [
-                        'app'           => 'app.php',
-                        'app-main-menu' => 'app-main-menu.php',
-                    ],
-                ],
-            ],
+            'translations' => $translations,
+        ],
+        'formatter' => [
+            'class'          => yii\i18n\Formatter::class,
+            'dateFormat'     => 'php:d.m.Y',
+            'datetimeFormat' => 'php:d.m.Y, H:i:s',
+            'timeFormat'     => 'php:H:i:s',
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
